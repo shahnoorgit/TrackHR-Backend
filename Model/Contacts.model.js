@@ -6,7 +6,7 @@ const HRcontactSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    PhoneNumber: {
+    phoneNumber: {
       type: String,
       required: true,
     },
@@ -24,9 +24,8 @@ const HRcontactSchema = new mongoose.Schema(
       default: Date.now,
     },
     user: {
-      type: Schema.Types.ObjectId,
-      ref: "User", // Reference to the User model
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }

@@ -3,6 +3,7 @@ import express from "express";
 import connectDB from "./DB/DBconnect.js";
 import UserRoute from "./Routes/User.routes.js";
 import bodyParser from "body-parser";
+import ContactRoute from "./Routes/Contact.route.js";
 import cors from "cors";
 
 dotenv.config();
@@ -22,3 +23,4 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/user", UserRoute);
+app.use("/api/user/contacts", ContactRoute);
