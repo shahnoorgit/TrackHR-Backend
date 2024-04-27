@@ -13,7 +13,11 @@ export const loginUser = async (req, res) => {
     return res.status(400).json({ error: "Password does not match" });
   }
   generateTokenandsetCookie(user._id, res);
-  res.status(200).json({ user });
+  res.status(200).json({
+    username: user.username,
+    contacts: user.contacts,
+    _id: user._id,
+  });
 };
 
 export const signInUser = async (req, res) => {
@@ -42,7 +46,13 @@ export const signInUser = async (req, res) => {
     contacts: [],
   });
   await newUser.save();
-  res.status(200).json({ newUser });
+  res
+    .status(200)
+    .json({
+      username: newUser.username,
+      contacts: newUser.contacts,
+      _id: newUser._id,
+    });
 };
 
 export const logoutUser = async (req, res) => {

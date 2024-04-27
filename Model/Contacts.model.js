@@ -14,9 +14,13 @@ const HRcontactSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      required: true,
+    },
     action: {
       type: String,
-      enum: ["contacted", "pending", "not_received_call", "successful"],
+      enum: ["contacted", "pending", "call_not_picked", "successful", "failed"],
       default: "pending", // Default action when contact is added
     },
     contactDate: {

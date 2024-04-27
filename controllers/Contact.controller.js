@@ -2,11 +2,12 @@ import Contacts from "../Model/Contacts.model.js";
 import User from "../Model/User.model.js";
 
 export const createContact = async (req, res) => {
-  const { user_id, name, phoneNumber, email, action } = req.body;
+  const { user_id, name, phoneNumber, email, action, role } = req.body;
 
   try {
     const newContact = await Contacts.create({
       name,
+      role,
       phoneNumber,
       email,
       action,
@@ -39,14 +40,11 @@ export const deleteContact = async (req, res) => {
 };
 
 export const updateContact = async (req, res) => {
-  const { contact_id, name, email, phoneNumber, action } = req.body;
+  const { contact_id, action } = req.body;
   try {
     await Contacts.findByIdAndUpdate(
       { _id: contact_id },
       {
-        name,
-        email,
-        phoneNumber,
         action,
       }
     );
@@ -60,10 +58,39 @@ export const updateContact = async (req, res) => {
 export const fetchMyContacts = async (req, res) => {
   const { _id } = req.params;
   try {
-    const mycontacts = await User.findById(_id).populate("contacts");
+    const mycontacts = await User.findById(_id).populate({
+      path: "contacts",
+      options: { sort: { updatedAt: -1 } }, // Sort contacts by updatedAt in descending order
+    });
     res.status(200).json(mycontacts.contacts);
   } catch (error) {
     console.log(error);
+    res.status(500).json(error);
+  }
+};
+
+export const fetchMyWeeksContacts = async (req, res) => {
+  const { _id } = req.params;
+  try {
+    // Calculate the start date of the current week (Sunday)
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+
+    // Calculate the end date of the current week (Saturday)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+    const mycontacts = await User.findById(_id).populate({
+      path: "contacts",
+      match: {
+        createdAt: { $gte: startOfWeek, $lte: endOfWeek }, // Filter contacts for the current week
+      },
+      options: { sort: { createdAt: -1 } }, // Sort by createdAt field in descending order (latest first)
+    });
+
+    res.status(200).json(mycontacts.contacts);
+  } catch (error) {
+    console.error(error);
     res.status(500).json(error);
   }
 };
