@@ -1,65 +1,6 @@
-import generateTokenandsetCookie from "../utils/jwtToken.js";
-import User from "../Model/User.model.js";
-import bcrypt from "bcrypt";
 import Contacts from "../Model/Contacts.model.js";
 
-export const loginUser = async (req, res) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username: username });
-  if (!user) {
-    return res.status(400).json({ error: "User does not exist" });
-  }
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(400).json({ error: "Password does not match" });
-  }
-  generateTokenandsetCookie(user._id, res);
-  res.status(200).json({
-    username: user.username,
-    contacts: user.contacts,
-    _id: user._id,
-  });
-};
-
-export const signInUser = async (req, res) => {
-  const { username, password, confirmPassword } = req.body;
-  if (password.length < 5) {
-    return res
-      .status(400)
-      .json({ error: "Password must be at least 5 characters long" });
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ error: "Passwords do not match" });
-  }
-
-  const user = await User.findOne({ username: username });
-
-  if (user) {
-    return res.status(400).json({ error: "User already exists" });
-  }
-
-  const salt = await bcrypt.genSalt(5);
-  const HashedPassword = await bcrypt.hash(password, salt);
-  const newUser = await User.create({
-    username: username,
-    password: HashedPassword,
-    contacts: [],
-  });
-  await newUser.save();
-  res.status(200).json({
-    username: newUser.username,
-    contacts: newUser.contacts,
-    _id: newUser._id,
-  });
-};
-
-export const logoutUser = async (req, res) => {
-  res.clearCookie("jwt");
-  res.status(200).json({ message: "Successfully logged out" });
-};
-
-export const UserStats = async (req, res) => {
+export const report = async (req, res) => {
   const { user_id } = req.params;
   const startOfWeek = new Date();
   startOfWeek.setHours(0, 0, 0, 0);
@@ -91,10 +32,6 @@ export const UserStats = async (req, res) => {
       user: user_id,
       action: "call_not_picked",
     });
-    const pendingCount = await Contacts.countDocuments({
-      user: user_id,
-      action: "pending",
-    });
 
     // Counts for this week
     const contactsThisWeek = await Contacts.countDocuments({
@@ -116,11 +53,6 @@ export const UserStats = async (req, res) => {
       contactDate: { $gte: startOfWeek, $lte: endOfWeek },
       action: "call_not_picked",
     });
-    const pendingThisWeek = await Contacts.countDocuments({
-      user: user_id,
-      contactDate: { $gte: startOfWeek, $lte: endOfWeek },
-      action: "pending",
-    });
 
     // Counts for this month
     const contactsThisMonth = await Contacts.countDocuments({
@@ -141,11 +73,6 @@ export const UserStats = async (req, res) => {
       user: user_id,
       contactDate: { $gte: startOfMonth, $lte: endOfMonth },
       action: "call_not_picked",
-    });
-    const pendingThisMonth = await Contacts.countDocuments({
-      user: user_id,
-      contactDate: { $gte: startOfMonth, $lte: endOfMonth },
-      action: "pending",
     });
 
     // Calculate percentages
@@ -182,7 +109,6 @@ export const UserStats = async (req, res) => {
     res.json({
       overall: {
         allContactsCount,
-        pendingCount,
         contactedCount,
         contactedPercentage: contactedPercentageOverall,
         successfulCount,
@@ -192,7 +118,6 @@ export const UserStats = async (req, res) => {
       },
       thisWeek: {
         contactsThisWeek,
-        pendingThisWeek,
         contactedThisWeek,
         contactedPercentage: contactedPercentageThisWeek,
         successfulThisWeek,
@@ -202,7 +127,6 @@ export const UserStats = async (req, res) => {
       },
       thisMonth: {
         contactsThisMonth,
-        pendingThisMonth,
         contactedThisMonth,
         contactedPercentage: contactedPercentageThisMonth,
         successfulThisMonth,

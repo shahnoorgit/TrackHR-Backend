@@ -72,13 +72,13 @@ export const fetchMyContacts = async (req, res) => {
 export const fetchMyWeeksContacts = async (req, res) => {
   const { _id } = req.params;
   try {
-    // Calculate the start date of the current week (Sunday)
     const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-
-    // Calculate the end date of the current week (Saturday)
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    // Calculate the start date of the current week (Sunday)
+    startOfWeek.setHours(0, 0, 0, 0);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Start of the current week (Sunday)
+    const endOfWeek = new Date();
+    endOfWeek.setHours(23, 59, 59, 999);
+    endOfWeek.setDate(endOfWeek.getDate() + (6 - endOfWeek.getDay())); // End of the current week (Saturday)
 
     const mycontacts = await User.findById(_id).populate({
       path: "contacts",
